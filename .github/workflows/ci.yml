@@ -56,3 +56,21 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/node-app:latest .
           docker push ${{ secrets.DOCKER_USERNAME }}/node-app:latest
+security_scan:
+  name: Scan Image with Trivy
+  runs-on: ubuntu-latest
+  needs: docker  # Contrainte : s'exécute après le job build docker
+
+  steps:
+    - name: Recuperer le code source
+      uses: actions/checkout@v4
+
+    - name: Lancer Trivy Scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        # On scanne l'image que vous venez de créer
+        image-ref: '${{ secrets.DOCKER_USERNAME }}/node-app:latest'
+        format: 'table'
+          # Contrainte : Detecter uniquement HIGH et CRITICAL
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1' # Fait échouer le pipeline si des vulnérabilités sont trouvées
